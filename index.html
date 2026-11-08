@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<!-- Search Engine Optimization (SEO) Title & Meta Tags -->
+<title>Projection of Solids Visualizer & Solver | KTU Engineering Graphics</title>
+<meta name="description" content="Interactive 3D and 2D projection of solids visualizer for engineering students. Solve pyramids, prisms, cones, and cylinders with custom HP and VP inclinations easily. Built for KTU EST 110 syllabus.">
+<meta name="keywords" content="projection of solids, engineering graphics, KTU EST 110, solid geometry visualizer, 3D projection solver, engineering drawing tools, APJ Abdul Kalam Technological University">
+<meta name="author" content="Pranav M S">
+
+<!-- Social Media & Link Sharing Preview (Open Graph) -->
+<meta property="og:title" content="Projection of Solids Visualizer & Solver | Engineering Graphics">
+<meta property="og:description" content="Step-by-step interactive 3D & 2D solver for pyramids, prisms, and cylinders inclined to HP and VP. Perfect for KTU B.Tech students.">
+<meta property="og:type" content="website">
+
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f7f7f3;--fg:#1d2230;--mut:#5b6478;--card:#fff;--bd:#d5d9e2;--ac:#1f5fbf;--ln:#111;--pl:#e3ebfa}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161c;--fg:#e8eaf0;--mut:#9aa3b8;--card:#1d2029;--bd:#343a4a;--ac:#6aa3ff;--ln:#f2f2f2;--pl:#262f45}}
+:root[data-theme="dark"]{--bg:#14161c;--fg:#e8eaf0;--mut:#9aa3b8;--card:#1d2029;--bd:#343a4a;--ac:#6aa3ff;--ln:#f2f2f2;--pl:#262f45}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100%}
+.app{display:flex;flex-wrap:wrap;gap:14px;padding:14px;max-width:1350px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+#ctl{flex:0 0 330px;display:flex;flex-direction:column;gap:10px}
+#main{flex:1 1 400px;min-width:0;display:flex;flex-direction:column;gap:14px}
+h1{font-size:19px;margin:0 0 2px}
+label{display:flex;flex-direction:column;font-size:12.5px;color:var(--mut);gap:3px;flex:1}
+select,input[type=number]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:7px 8px;width:100%}
+.row{display:flex;gap:8px}
+.chk{flex-direction:row;align-items:center;gap:6px;font-size:13.5px;color:var(--fg)}
+.chk input{width:auto}
+button{font:inherit;border:1px solid var(--bd);background:var(--bg);color:var(--fg);border-radius:8px;padding:6px 11px;cursor:pointer}
+button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+#bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#pr{flex:1 1 160px}
+#stg{font-size:13.5px;color:var(--mut);min-height:38px;margin-top:8px}
+canvas{width:100%;display:block}
+#cv2{height:560px}
+#c3{height:340px;touch-action:none;cursor:grab}
+#msg{color:#c0392b;font-size:13px;min-height:18px;font-weight:600}
+#res{font-size:13px;color:var(--mut);border-top:1px solid var(--bd);padding-top:8px;line-height:1.5}
+.hint{font-size:12px;color:var(--mut);margin-top:6px}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="card" id="ctl">
+  <h1>Projection of Solids</h1>
+  <label>Solid<select id="sol"></select></label>
+  <div class="row">
+    <label id="lS">Base Edge (mm)<input id="s" type="number" value="30" min="5"></label>
+    <label id="lD">Diameter (mm)<input id="d" type="number" value="40" min="5"></label>
+    <label id="lH">Axis Length (mm)<input id="h" type="number" value="60" min="5"></label>
+  </div>
+  <label>Resting Plane<select id="pl"><option value="HP">HP (Horizontal Plane)</option><option value="VP">VP (Vertical Plane)</option></select></label>
+  <label>Touching / Resting Element<select id="ct"></select></label>
+  
+  <div class="row">
+    <label>Resting Tilt Ref<select id="hpT"></select></label>
+    <label><span id="lbl1">Angle to HP (°)</span><input id="hpA" type="number" value="45" min="0" max="90"></label>
+  </div>
+  <div class="row">
+    <label>Secondary Ref<select id="vpT"></select></label>
+    <label><span id="lbl2">Angle to VP/XY (°)</span><input id="vpA" type="number" value="40" min="0" max="90"></label>
+  </div>
+  
+  <div class="row">
+    <label><span id="apl">Apex / Top Base</span><select id="ap"></select></label>
+    <label>Tilt Direction<select id="lean"><option value="1">Right</option><option value="-1">Left</option></select></label>
+  </div>
+  <label>Offset from opposite plane (mm)<input id="gap" type="number" value="20" min="0"></label>
+  <label class="chk"><input type="checkbox" id="hid" checked>Show hidden edges (dashed)</label>
+  <label class="chk"><input type="checkbox" id="sv">Show side view (profile)</label>
+  <label class="chk"><input type="checkbox" id="dm" checked>Show dimensions</label>
+  <label class="chk"><input type="checkbox" id="an" checked>Show angles on projections</label>
+  <div id="msg"></div>
+  <div id="res"></div>
+</aside>
+
+<main id="main">
+  <div class="card">
+    <div id="bar">
+      <button data-s="0">Start</button>
+      <button data-s="100">Stage 1</button>
+      <button data-s="200" class="on">Final</button>
+      <input type="range" id="pr" min="0" max="200" value="200">
+      <button id="play">Play</button>
+    </div>
+    <div id="stg"></div>
+    <canvas id="cv2"></canvas>
+  </div>
+  <div class="card">
+    <canvas id="c3"></canvas>
+    <div class="hint">Drag 3D scene to rotate. Light blue planes depict HP (horizontal ground) and VP (vertical back wall).</div>
+  </div>
+</main>
+</div>
+
+<script>
+const $=i=>document.getElementById(i), D=Math.PI/180;
+const SOL=[
+  ['Hexagonal Pyramid','pyr',6],['Square Pyramid','pyr',4],['Pentagonal Pyramid','pyr',5],
+  ['Tetrahedron','tet',3],['Cone','cone',0],['Cylinder','cyl',0],
+  ['Triangular Prism','pri',3],['Square Prism','pri',4],['Pentagonal Prism','pri',5],['Hexagonal Prism','pri',6]
+];
+SOL.forEach((s,i)=>$('sol').add(new Option(s[0],i)));
+$('sol').value=1;
+
+let az3=0.6, el3=0.45, PL='HP', OT='VP', OWN='top', OTH='front';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+function setOpts(sel,opts){
+  const cur=sel.value;
+  sel.innerHTML='';
+  opts.forEach(o=>sel.add(new Option(o[1],o[0])));
+  if(opts.some(o=>o[0]===cur)) sel.value=cur;
+}
+
+function refresh(){
+  const [nm,k,n]=SOL[+$('sol').value], vp=$('pl').value==='VP', circ=k==='cone'||k==='cyl', pri=k==='pri';
+  PL=vp?'VP':'HP'; OT=vp?'HP':'VP'; OWN=vp?'front':'top'; OTH=vp?'top':'front';
+  
+  // Dynamically update angle labels depending on whether resting on HP or VP
+  $('lbl1').textContent = vp ? 'Angle to VP (°)' : 'Angle to HP (°)';
+  $('lbl2').textContent = vp ? 'Angle to HP / XY (°)' : 'Angle to VP / XY (°)';
+
+  $('lS').style.display=circ?'none':''; $('lD').style.display=circ?'':'none'; $('lH').style.display=k==='tet'?'none':'';
+  
+  const ctOpts=[['flat','Base flat on plane']];
+  if(circ){
+    ctOpts.push(['edge','Point on base circumference'],['face','Generator line / face']);
+  } else {
+    ctOpts.push(['edge','Base Edge'],['corner','Base Corner']);
+    if(pri){
+      ctOpts.push(['ledge','Lateral / Longer Edge'],['lface','Rectangular Lateral Face']);
+    } else {
+      ctOpts.push(['ledge','Slant Edge'],['face','Triangular Slant Face']);
+    }
+  }
+  setOpts($('ct'),ctOpts);
+  const ct=$('ct').value;
+  
+  const priRef=[['axis','Axis'],['base','Base']];
+  if(['edge','ledge'].includes(ct)) priRef.push(['edge','Resting Edge']);
+  if(['face','lface'].includes(ct)) priRef.push(['face','Resting Face']);
+  setOpts($(vp?'vpT':'hpT'), priRef);
+  
+  const secRef=[
+    ['axisO','Axis (True angle to opposite plane)'],
+    ['topView','Top view of axis (Angle with XY / Apparent)'],
+    ['frontView','Front view of axis (Angle with XY / Apparent)']
+  ];
+  if(!circ) secRef.push(['edgeO','Base Edge']);
+  if(['ledge','edge'].includes(ct)) secRef.push(['slantO','Resting Edge']);
+  setOpts($(vp?'hpT':'vpT'), secRef);
+
+  $('apl').textContent=(pri||k==='cyl')?'Upper Base':'Apex';
+  setOpts($('ap'),[['-1','Towards '+OT],['1','Away from '+OT]]);
+}
+
+function build(k,n,p,corner,sx){
+  const circ=k==='cone'||k==='cyl', N=circ?36:n, V=[], F=[], R=circ?p.d/2:p.s/(2*Math.sin(Math.PI/n)), h=k==='tet'?p.s*Math.sqrt(2/3):p.h;
+  const off=(circ||corner)?0:(Math.PI/N);
+  const ring=z=>{
+    for(let i=0;i<N;i++){
+      const a=((sx<0?Math.PI:0)+off+i*2*Math.PI/N);
+      V.push([R*Math.cos(a),R*Math.sin(a),z]);
+    }
+  };
+  ring(0);
+  const pyr=k==='pyr'||k==='tet'||k==='cone', cv=k==='cone'||k==='cyl', I=[...Array(N).keys()];
+  if(pyr) V.push([0,0,h]); else ring(h);
+  F.push({i:I,c:false});
+  for(let i=0;i<N;i++){
+    const j=(i+1)%N;
+    F.push({i:pyr?[i,j,N]:[i,j,N+j,N+i],c:cv});
+  }
+  if(!pyr) F.push({i:I.map(x=>x+N),c:false});
+  const m=new Map();
+  F.forEach((f,fi)=>f.i.forEach((a,q)=>{
+    const b=f.i[(q+1)%f.i.length], key=Math.min(a,b)+'_'+Math.max(a,b);
+    if(!m.has(key)) m.set(key,{a,b,f:[]});
+    m.get(key).f.push(fi);
+  }));
+  const E=[...m.values()].map(e=>({...e,cu:e.f.every(x=>F[x].c)}));
+  return{V,F,E,N,h,pyr,R,a:circ?R:R*Math.cos(Math.PI/n)};
+}
+
+function compute(){
+  const [nm,k,n]=SOL[+$('sol').value], ct=$('ct').value, circ=k==='cone'||k==='cyl', pri=k==='pri';
+  const par={s:+$('s').value,d:+$('d').value,h:+$('h').value,gap:+$('gap').value};
+  if(!(par.s>0&&par.d>0&&par.h>0&&par.gap>=0)) return {err:'Please enter valid positive dimensions.'};
+  
+  const sx=+$('lean').value, G=build(k,n,par,ct==='corner'||ct==='ledge',sx);
+  const isVP=PL==='VP', pKey=isVP?'vp':'hp', sKey=isVP?'hp':'vp';
+  const pRef=$(pKey+'T').value, pAng=+$(pKey+'A').value*D;
+  const sRef=$(sKey+'T').value, sAng=+$(sKey+'A').value*D;
+
+  let t1=0;
+  const R90=Math.PI/2, eps=Math.atan2(G.R,G.h), alpha=Math.atan2(G.a,G.h);
+  
+  if(ct==='flat') t1=0;
+  else if(ct==='corner'||ct==='edge'){
+    t1 = pRef==='axis' ? (R90 - pAng) : pAng;
+  } else if(ct==='ledge'){
+    t1 = pri ? (R90 - pAng) : (R90 - pAng + eps);
+  } else if(ct==='face'||ct==='lface'){
+    t1 = pri ? (R90 - pAng) : (R90 - pAng + alpha);
+  }
+
+  let psi = sx * sAng;
+  if(sRef === 'axisO'){
+    const cosB = Math.cos(sAng);
+    psi = Math.atan2(sx * Math.sin(sAng), cosB);
+  } else if(sRef === 'topView' || sRef === 'frontView'){
+    psi = sx * sAng;
+  }
+
+  return {G, t:sx*t1, psi, gap:par.gap, k, par, ct};
+}
+
+function place(r,q){
+  const tt=r.t*Math.min(q,1), ps=r.psi*Math.max(q-1,0), vp=$('pl').value==='VP';
+  let W=r.G.V.map(([x,y,z])=>{
+    const c=Math.cos(tt), s=Math.sin(tt);
+    return [x*c+z*s, y, -x*s+z*c];
+  });
+  const c2=Math.cos(ps), s2=Math.sin(ps);
+  W=W.map(([x,y,z])=>[x*c2-y*s2, x*s2+y*c2, z]);
+  
+  const mn=[1e9,1e9,1e9], mx=[-1e9,-1e9,-1e9];
+  W.forEach(p=>p.forEach((v,i)=>{mn[i]=Math.min(mn[i],v); mx[i]=Math.max(mx[i],v)}));
+  W=W.map(p=>[p[0]-(mn[0]+mx[0])/2, p[1]-mn[1]+r.gap, p[2]-mn[2]]);
+  return vp ? W.map(p=>[p[0],p[2],p[1]]) : W;
+}
+
+function normals(W,F,N,pyr){
+  const m=(a,b)=>{const q=[0,0,0];for(let i=a;i<b;i++)for(let j=0;j<3;j++)q[j]+=W[i][j]/(b-a);return q};
+  const B=m(0,N), T=pyr?W[N]:m(N,2*N), c=[0,1,2].map(j=>(B[j]+T[j])/2);
+  return F.map(f=>{
+    const a=W[f.i[0]], b=W[f.i[1]], d=W[f.i[2]], u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]], v=[d[0]-a[0],d[1]-a[1],d[2]-a[2]];
+    let n=[u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]];
+    const fc=[0,0,0]; f.i.forEach(i=>{for(let j=0;j<3;j++)fc[j]+=W[i][j]/f.i.length});
+    if(n[0]*(fc[0]-c[0])+n[1]*(fc[1]-c[1])+n[2]*(fc[2]-c[2])<0) n=n.map(x=>-x);
+    const l=Math.hypot(...n)||1; return n.map(x=>x/l);
+  });
+}
+
+function edges(c,W,G,nr,vd,pj,hid){
+  const fr=nr.map(n=>n[0]*vd[0]+n[1]*vd[1]+n[2]*vd[2]);
+  c.strokeStyle=css('--ln'); c.lineWidth=1.6;
+  G.E.forEach(e=>{
+    const f=e.f.map(i=>fr[i]); let vis;
+    if(e.cu){ if(f.filter(v=>v>1e-6).length!==1) return; vis=true; }
+    else vis=f.some(v=>v>-1e-6);
+    if(!vis&&!hid) return;
+    c.setLineDash(vis?[]:[5,4]); c.beginPath();
+    const a=pj(W[e.a]), b=pj(W[e.b]);
+    c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke();
+  });
+  c.setLineDash([]);
+}
+
+function fit(cv){
+  const r=cv.getBoundingClientRect(), d=window.devicePixelRatio||1;
+  cv.width=r.width*d; cv.height=r.height*d;
+  const c=cv.getContext('2d'); c.setTransform(d,0,0,d,0,0);
+  return [c,r.width,r.height];
+}
+
+function ang(v,a,b){ return Math.atan2(Math.abs(v[a]),Math.abs(v[b]))/D; }
+
+function angMark(c,P,Q,txt,col){
+  const dx=Q[0]-P[0], dy=Q[1]-P[1], Ln=Math.hypot(dx,dy); if(Ln<6)return;
+  const s=dx<0?-1:1, f=Math.atan2(dy,Math.abs(dx)), R=Math.min(34,Ln*.6);
+  c.save(); c.strokeStyle=c.fillStyle=col; c.lineWidth=1.6; c.setLineDash([8,3,2,3]);
+  c.beginPath(); c.moveTo(P[0],P[1]); c.lineTo(Q[0],Q[1]); c.stroke();
+  c.setLineDash([2,3]); c.lineWidth=1; c.beginPath(); c.moveTo(P[0],P[1]); c.lineTo(P[0]+s*(R+24),P[1]); c.stroke();
+  c.setLineDash([]); c.translate(P[0],P[1]); c.scale(s,1); c.beginPath(); c.arc(0,0,R,0,f,f<0); c.stroke(); c.scale(s,1);
+  c.font='bold 12px system-ui'; c.textAlign=s<0?'right':'left';
+  c.fillText(txt,s*(R+8)*Math.cos(f/2),(R+8)*Math.sin(f/2)+(Math.abs(f)<.3?14:4)); c.restore();
+}
+
+function dim(c,a,b,off,txt,cen){
+  const dx=b[0]-a[0], dy=b[1]-a[1], L=Math.hypot(dx,dy)||1; let nx=-dy/L*off, ny=dx/L*off;
+  if(cen&&((a[0]+b[0])/2-cen[0])*nx+((a[1]+b[1])/2-cen[1])*ny<0){ nx=-nx; ny=-ny; }
+  const A=[a[0]+nx,a[1]+ny], B=[b[0]+nx,b[1]+ny];
+  c.save(); c.strokeStyle=c.fillStyle=css('--ac'); c.lineWidth=1; c.beginPath();
+  if(off){ c.moveTo(a[0],a[1]); c.lineTo(A[0]+nx*.2,A[1]+ny*.2); c.moveTo(b[0],b[1]); c.lineTo(B[0]+nx*.2,B[1]+ny*.2); }
+  c.moveTo(A[0],A[1]); c.lineTo(B[0],B[1]); c.stroke();
+  const ar=(P,s)=>{
+    const ux=dx/L*s, uy=dy/L*s;
+    c.beginPath(); c.moveTo(P[0],P[1]); c.lineTo(P[0]+ux*8-uy*3,P[1]+uy*8+ux*3); c.lineTo(P[0]+ux*8+uy*3,P[1]+uy*8-ux*3); c.fill();
+  };
+  ar(A,1); ar(B,-1); c.font='12px system-ui'; c.textAlign='center';
+  c.fillText(txt,(A[0]+B[0])/2+nx*.3,(A[1]+B[1])/2+ny*.3-4); c.restore();
+}
+
+function draw(){
+  const r=compute(), [c,w,h]=fit($('cv2')), [c3,w3,h3]=fit($('c3'));
+  $('msg').textContent=r.err||''; if(r.err){ $('res').textContent=''; return; }
+  
+  const p=+$('pr').value/100, W=place(r,p), nr=normals(W,r.G.F,r.G.N,r.G.pyr), hid=$('hid').checked, sv=$('sv').checked;
+  let xr=0, zr=0, yr=0;
+  [0,.5,1,1.5,2].forEach(q=>place(r,q).forEach(v=>{ xr=Math.max(xr,Math.abs(v[0])); zr=Math.max(zr,v[2]); yr=Math.max(yr,v[1]); }));
+  
+  const pad=26, sc=Math.min((w-2*pad)/(2*xr+(sv?yr+40:0)), (h-2*pad-24)/(zr+yr));
+  const X0=pad+xr*sc, Y0=pad+zr*sc+12, RX=X0+xr*sc+40+yr*sc;
+  
+  c.font='13px system-ui'; c.fillStyle=css('--mut'); c.strokeStyle=css('--mut'); c.lineWidth=1;
+  c.beginPath(); c.moveTo(6,Y0); c.lineTo(w-6,Y0); c.stroke();
+  c.fillText('X',8,Y0-6); c.fillText('Y',w-16,Y0-6);
+  c.fillText('FV (Front View)',8,16); c.fillText('TV (Top View)',8,Y0+yr*sc+22);
+  
+  c.save(); c.textAlign='right'; c.globalAlpha=.75; c.font='11px system-ui';
+  c.fillText('Made by PRANAV M S, CAPE College, Punnapra',w-8,Y0+14); c.restore();
+  
+  edges(c,W,r.G,nr,[0,1,0],q=>[X0+q[0]*sc,Y0-q[2]*sc],hid);
+  edges(c,W,r.G,nr,[0,0,1],q=>[X0+q[0]*sc,Y0+q[1]*sc],hid);
+  
+  if(sv){
+    c.strokeStyle=css('--mut'); c.beginPath(); c.moveTo(RX,Y0-zr*sc-8); c.lineTo(RX,Y0+yr*sc); c.stroke();
+    c.fillStyle=css('--mut'); c.fillText('Side View (Left)',RX-(yr*sc)-40,16);
+    edges(c,W,r.G,nr,[-1,0,0],q=>[RX-q[1]*sc,Y0-q[2]*sc],hid);
+  }
+  
+  const ex=Math.max(2*xr,yr,zr)*1.35+10, pc=[0,ex/2,ex/2];
+  const cx=Math.sin(az3)*Math.cos(el3), cy=Math.cos(az3)*Math.cos(el3), cz=Math.sin(el3);
+  let rr=[cy,-cx,0]; const rl=Math.hypot(rr[0],rr[1])||1; rr=rr.map(v=>v/rl);
+  const u=[rr[1]*cz-rr[2]*cy, rr[2]*cx-rr[0]*cz, rr[0]*cy-rr[1]*cx], s3=Math.min(w3,h3)/(1.9*ex);
+  const pj=q=>{
+    const d=[q[0]-pc[0],q[1]-pc[1],q[2]-pc[2]];
+    return [w3/2+(d[0]*rr[0]+d[1]*rr[1]+d[2]*rr[2])*s3, h3/2-(d[0]*u[0]+d[1]*u[1]+d[2]*u[2])*s3];
+  };
+  
+  const quad=(pts,lab)=>{
+    c3.beginPath(); pts.map(pj).forEach((q,i)=>i?c3.lineTo(q[0],q[1]):c3.moveTo(q[0],q[1])); c3.closePath();
+    c3.fillStyle=css('--pl'); c3.globalAlpha=.8; c3.fill(); c3.globalAlpha=1; c3.strokeStyle=css('--bd'); c3.lineWidth=1; c3.stroke();
+    const l=pj(pts[2]); c3.fillStyle=css('--ac'); c3.font='bold 13px system-ui'; c3.fillText(lab,l[0]-22,l[1]-5);
+  };
+  quad([[-ex/2,0,0],[ex/2,0,0],[ex/2,0,ex],[-ex/2,0,ex]],'VP');
+  quad([[-ex/2,0,0],[ex/2,0,0],[ex/2,ex,0],[-ex/2,ex,0]],'HP');
+  
+  {
+    const L=[.4,.5,.75], fs=r.G.F.map((f,i)=>{
+      const m=[0,0,0]; f.i.forEach(j=>{for(let q=0;q<3;q++)m[q]+=W[j][q]/f.i.length});
+      return {f,i,d:m[0]*cx+m[1]*cy+m[2]*cz};
+    }).sort((a,b)=>a.d-b.d);
+    
+    fs.forEach(o=>{
+      const n=nr[o.i], sh=Math.abs(n[0]*L[0]+n[1]*L[1]+n[2]*L[2]);
+      c3.beginPath(); o.f.i.forEach((j,q)=>{const pp=pj(W[j]); q?c3.lineTo(pp[0],pp[1]):c3.moveTo(pp[0],pp[1]);}); c3.closePath();
+      c3.fillStyle='rgba('+(90+sh*60|0)+','+(150+sh*70|0)+',230,'+(.22+.2*sh).toFixed(2)+')'; c3.fill();
+    });
+  }
+  edges(c3,W,r.G,nr,[cx,cy,cz],pj,hid);
+
+  const N=r.G.N, mean=(a,b)=>{const m=[0,0,0];for(let i=a;i<b;i++)for(let j=0;j<3;j++)m[j]+=W[i][j]/(b-a);return m};
+  const b0=mean(0,N), t0=r.G.pyr?W[N]:mean(N,2*N), ax=[t0[0]-b0[0],t0[1]-b0[1],t0[2]-b0[2]], L=Math.hypot(...ax);
+  const aH=Math.asin(Math.abs(ax[2])/L)/D, aV=Math.asin(Math.abs(ax[1])/L)/D;
+  $('res').innerHTML='Axis inclination: <b>'+aH.toFixed(1)+'°</b> to HP | <b>'+aV.toFixed(1)+'°</b> to VP.<br>Top view of axis: <b>'+ang(ax,1,0).toFixed(1)+'°</b> to XY | Front view of axis: <b>'+ang(ax,2,0).toFixed(1)+'°</b> to XY.';
+
+  const f=v=>(Math.round(v*10)/10).toFixed(1);
+  if(p>1.98 && $('an').checked){
+    const fv=q=>[X0+q[0]*sc,Y0-q[2]*sc], tv=q=>[X0+q[0]*sc,Y0+q[1]*sc];
+    angMark(c,fv(b0),fv(t0),'FV axis '+f(ang(ax,2,0))+'°','#d9731a');
+    angMark(c,tv(b0),tv(t0),'TV axis '+f(ang(ax,1,0))+'°','#d9731a');
+  }
+
+  const T=[
+    `<b>Start:</b> The solid stands on ${PL} with axis perpendicular to ${PL}.`,
+    `<b>Stage 1:</b> Tilted so the resting element lies on ${PL} with the axis inclined to ${PL}.`,
+    `<b>Final Stage:</b> Rotated so that the secondary element/axis achieves the requested angle to ${OT}.`
+  ];
+  $('stg').innerHTML = p<.02 ? T[0] : Math.abs(p-1)<.02 ? T[1] : p>1.98 ? T[2] : 'Transitioning between projection stages...';
+  document.querySelectorAll('#bar button[data-s]').forEach(b=>b.classList.toggle('on',Math.abs(+b.dataset.s-p*100)<2));
+}
+
+document.querySelectorAll('#bar button[data-s]').forEach(b=>b.onclick=()=>{$('pr').value=b.dataset.s; draw();});
+$('play').onclick=()=>{
+  let v=0; const fn=()=>{ v+=2; $('pr').value=Math.min(v,200); draw(); if(v<200) requestAnimationFrame(fn); }; fn();
+};
+
+['sol','pl','ct'].forEach(i=>$(i).onchange=()=>{ refresh(); draw(); });
+['s','d','h','hpT','hpA','vpT','vpA','ap','gap','hid','sv','dm','an','pr'].forEach(i=>{ $(i).oninput=draw; $(i).onchange=draw; });
+
+// Automatically adjust 3D camera angle matching tilt direction
+$('lean').onchange = () => {
+  az3 = +$('lean').value > 0 ? 0.6 : -0.6;
+  draw();
+};
+
+let drag=null; const c3=$('c3');
+c3.onpointerdown=e=>{ drag=[e.clientX,e.clientY]; c3.setPointerCapture(e.pointerId); };
+c3.onpointermove=e=>{ if(!drag)return; az3-=(e.clientX-drag[0])*.01; el3=Math.max(-1.4,Math.min(1.4,el3+(e.clientY-drag[1])*.01)); drag=[e.clientX,e.clientY]; draw(); };
+c3.onpointerup=()=>drag=null;
+
+addEventListener('resize',draw);
+refresh(); $('ct').value='edge'; refresh(); draw();
+</script>
+</body>
+</html>
